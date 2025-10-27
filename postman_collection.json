@@ -1,0 +1,100 @@
+{
+  "info": {
+    "name": "WhatsApp API - TypeScript",
+    "description": "Colección de Postman para probar la API de WhatsApp",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Verifica el estado del servidor"
+      },
+      "response": []
+    },
+    {
+      "name": "Enviar Mensaje - México",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"521234567890\",\n  \"message\": \"¡Hola! Este es un mensaje de prueba desde la API de WhatsApp\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/lead",
+          "host": ["{{base_url}}"],
+          "path": ["lead"]
+        },
+        "description": "Envía un mensaje de WhatsApp a un número de México"
+      },
+      "response": []
+    },
+    {
+      "name": "Enviar Mensaje - España",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"34612345678\",\n  \"message\": \"Hola desde España\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/lead",
+          "host": ["{{base_url}}"],
+          "path": ["lead"]
+        },
+        "description": "Envía un mensaje de WhatsApp a un número de España"
+      },
+      "response": []
+    },
+    {
+      "name": "Enviar Mensaje - Colombia",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"573001234567\",\n  \"message\": \"Saludos desde Colombia\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/lead",
+          "host": ["{{base_url}}"],
+          "path": ["lead"]
+        },
+        "description": "Envía un mensaje de WhatsApp a un número de Colombia"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string"
+    }
+  ]
+}
+

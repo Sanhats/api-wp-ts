@@ -1,15 +1,19 @@
 {
-  "name": "whatsapp-api-yt",
+  "name": "whatsapp-api-ts",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "API REST para WhatsApp usando Baileys con TypeScript y arquitectura limpia",
+  "main": "dist/app.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon ./src/app.ts",
     "start": "node ./dist/app.js",
     "build": "tsc -p  ."
   },
-  "keywords": [],
+  "keywords": ["whatsapp", "api", "baileys", "typescript", "rest-api"],
   "author": "",
   "license": "ISC",
   "dependencies": {
