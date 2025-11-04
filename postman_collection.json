@@ -92,7 +92,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3001",
+      "value": "https://api-wp-ts-production.up.railway.app",
       "type": "string"
     }
   ]

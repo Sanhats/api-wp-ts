@@ -1,4 +1,7 @@
 import * as Baileys from "@whiskeysockets/baileys";
+import * as fs from "fs";
+import * as path from "path";
+import { image as imageQr } from "qr-image";
 
 import LeadExternal from "../../domain/lead-external.repository";
 
@@ -43,22 +46,89 @@ export class BaileysTransporter implements LeadExternal {
         ...socketConfig,
         auth: socketConfig.auth || state,
       });
+      
       this.connection.ev.on("creds.update", saveCreds);
-      this.connection.ev.on("connection.update", (state) => {
-        this.connectionState = state;
-        if (state.connection === "open") {
+      
+      // Capturar y guardar el QR
+      this.connection.ev.on("connection.update", (update) => {
+        const { connection, lastDisconnect, qr } = update;
+        
+        // Generar archivo QR si está disponible
+        if (qr) {
+          console.log("📱 Código QR generado. Escanea con WhatsApp.");
+          this.generateQRImage(qr);
+        }
+        
+        // Manejar estado de conexión
+        if (connection === "open") {
+          console.log("✅ WhatsApp conectado exitosamente!");
           this.onReady.forEach((cb) => cb(this.connection!));
         }
-
-        if (state.connection != "close") return;
-        if (this.isEnd) {
-          console.log(this.closedMessage);
-          return;
+        
+        if (connection === "close") {
+          const shouldReconnect = (lastDisconnect?.error as any)?.output?.statusCode !== 401;
+          if (this.isEnd) {
+            console.log(this.closedMessage);
+            return;
+          }
+          
+          if (shouldReconnect) {
+            console.log("🔄 Reconectando...");
+            this.reconnect();
+          } else {
+            console.log("❌ Sesión expirada. Por favor escanea el QR nuevamente.");
+            // Eliminar tokens para forzar nuevo login
+            this.clearAuthState();
+            setTimeout(() => this.reconnect(), 2000);
+          }
         }
-        !this.isEnd && this.reconnect();
+        
+        this.connectionState = update;
       });
     } catch (error) {
-      console.error(error);
+      console.error("Error al iniciar conexión:", error);
+    }
+  }
+
+  private generateQRImage(qr: string): void {
+    try {
+      const tmpDir = path.join(process.cwd(), "tmp");
+      
+      // Asegurar que la carpeta tmp existe
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      
+      const qrPath = path.join(tmpDir, "qr.svg");
+      const qrSvg = imageQr(qr, { type: "svg", margin: 4 });
+      
+      const writeStream = fs.createWriteStream(qrPath);
+      qrSvg.pipe(writeStream);
+      
+      writeStream.on("finish", () => {
+        const publicUrl = process.env.PUBLIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || "http://localhost:3001";
+        const qrUrl = `${publicUrl}/tmp/qr.svg`;
+        console.log(`📱 QR guardado en: ${qrPath}`);
+        console.log(`🌐 Accede al QR en: ${qrUrl}`);
+      });
+      
+      writeStream.on("error", (err) => {
+        console.error("Error al guardar QR:", err);
+      });
+    } catch (error) {
+      console.error("Error al generar QR:", error);
+    }
+  }
+
+  private clearAuthState(): void {
+    try {
+      const authDir = path.join(process.cwd(), this.sessionName);
+      if (fs.existsSync(authDir)) {
+        fs.rmSync(authDir, { recursive: true, force: true });
+        console.log("🗑️  Tokens de autenticación eliminados");
+      }
+    } catch (error) {
+      console.error("Error al limpiar tokens:", error);
     }
   }
 
