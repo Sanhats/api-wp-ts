@@ -36,7 +36,15 @@ export class BaileysTransporter implements LeadExternal {
 
   async start(socketConfig: Baileys.UserFacingSocketConfig = {} as any) {
     try {
+      console.log("🚀 Iniciando conexión de WhatsApp...");
       const { saveCreds, state } = await this.getAuth();
+      
+      // Si hay tokens guardados, informar
+      if (state && state.creds) {
+        console.log("🔑 Tokens de autenticación encontrados. Intentando reconectar...");
+      } else {
+        console.log("📱 No hay tokens guardados. Se generará un nuevo código QR.");
+      }
 
       this.connection = this.baileys.makeWASocket({
         printQRInTerminal: true,
@@ -53,6 +61,9 @@ export class BaileysTransporter implements LeadExternal {
       this.connection.ev.on("connection.update", (update) => {
         const { connection, lastDisconnect, qr } = update;
         
+        // Log para debugging
+        console.log(`🔍 Connection update: ${connection || 'unknown'}, QR: ${qr ? 'available' : 'not available'}`);
+        
         // Generar archivo QR si está disponible
         if (qr) {
           console.log("📱 Código QR generado. Escanea con WhatsApp.");
@@ -66,7 +77,11 @@ export class BaileysTransporter implements LeadExternal {
         }
         
         if (connection === "close") {
-          const shouldReconnect = (lastDisconnect?.error as any)?.output?.statusCode !== 401;
+          const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
+          const shouldReconnect = statusCode !== 401;
+          
+          console.log(`🔌 Conexión cerrada. Status code: ${statusCode || 'unknown'}`);
+          
           if (this.isEnd) {
             console.log(this.closedMessage);
             return;
@@ -74,9 +89,9 @@ export class BaileysTransporter implements LeadExternal {
           
           if (shouldReconnect) {
             console.log("🔄 Reconectando...");
-            this.reconnect();
+            setTimeout(() => this.reconnect(), 2000);
           } else {
-            console.log("❌ Sesión expirada. Por favor escanea el QR nuevamente.");
+            console.log("❌ Sesión expirada (401). Limpiando tokens y generando nuevo QR...");
             // Eliminar tokens para forzar nuevo login
             this.clearAuthState();
             setTimeout(() => this.reconnect(), 2000);
